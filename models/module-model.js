@@ -19,12 +19,14 @@ const moduleSchema = new Schema({
   },
   course: {
     required: true,
-    type: String,
+    type: Schema.ObjectId,
   },
-  lessonIds: {
-    required: true,
-    type: [String],
-  },
+  lessonIds: [
+  {
+    type: Schema.ObjectId,
+    ref: "Lesson"
+  }
+]
 });
 
 export const Module = mongoose.models.Module || mongoose.model("Module", moduleSchema);

@@ -19,7 +19,7 @@ const userSchema = new Schema({
         type: String,
     },
     phone: {
-        required: true,
+        required: false,
         type: String,
     },
     role: {
@@ -42,4 +42,4 @@ const userSchema = new Schema({
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 
-export default User;
+export { User };
