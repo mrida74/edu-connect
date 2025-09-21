@@ -60,22 +60,122 @@ npm install next-auth@beta @auth/mongodb-adapter mongodb bcryptjs mongoose
 3. **Protection**: Pages can be protected using `auth()` server-side or `useSession()` client-side
 4. **Logout**: Users can sign out through the logout functionality
 
-### Usage Examples
+### Login Process
 
-**Server Component:**
+**1. Login Form Component** (`app/login/_components/login-form.jsx`):
 ```javascript
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { logIn } from "@/app/actions";
+
+export function LoginForm() {
+  const [error, setError] = useState(null);
+  const router = useRouter();
+  
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const formData = new FormData(event.currentTarget);
+      const response = await logIn(formData);
+      
+      if (!!response.error) {
+        setError(response.error.message);
+      } else {
+        console.log("Login successful", response);
+        router.push('/courses'); // Redirect after login
+      }
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="grid gap-4">
+      {error && <p className="text-red-500">{error}</p>}
+      
+      <input
+        name="email"
+        type="email"
+        placeholder="Email"
+        required
+      />
+      
+      <input
+        name="password"
+        type="password"
+        placeholder="Password"
+        required
+      />
+      
+      <button type="submit">Login</button>
+    </form>
+  );
+}
+```
+
+**2. Server Action** (`app/actions/index.js`):
+```javascript
+"use server";
+import { signIn } from "@/auth";
+
+export async function logIn(formData) {
+  try {
+    const response = await signIn("credentials", {
+      email: formData.get("email"),
+      password: formData.get("password"),
+      redirect: false,
+    });
+    return response;
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+```
+
+### Logout Process
+
+**1. Logout Button Component:**
+```javascript
+"use client";
+import { signOut } from "next-auth/react";
+
+export function LogoutButton() {
+  return (
+    <button onClick={() => signOut({ callbackUrl: "/login" })}>
+      Logout
+    </button>
+  );
+}
+```
+
+**2. Server-side Logout:**
+```javascript
+import { signOut } from "@/auth";
+
+export async function logoutAction() {
+  await signOut({ redirectTo: "/login" });
+}
+```
+
+### Session Management
+
+**Check Authentication Status:**
+```javascript
+// Server Component
 import { auth } from "@/auth";
 
 export default async function ProtectedPage() {
   const session = await auth();
-  if (!session) redirect("/login");
+  
+  if (!session) {
+    redirect("/login");
+  }
   
   return <div>Welcome {session.user.name}</div>;
 }
-```
 
-**Client Component:**
-```javascript
+// Client Component
 "use client";
 import { useSession } from "next-auth/react";
 
@@ -83,7 +183,7 @@ export function UserProfile() {
   const { data: session, status } = useSession();
   
   if (status === "loading") return <div>Loading...</div>;
-  if (!session) return <div>Please login</div>;
+  if (status === "unauthenticated") return <div>Please login</div>;
   
   return <div>Hello {session.user.name}</div>;
 }
