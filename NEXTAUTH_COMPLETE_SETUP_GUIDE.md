@@ -487,7 +487,272 @@ export function UserMenu() {
 
 ---
 
-## 🚀 **Suggested Improvements for A+ Grade:**
+## � **Complete Login/Logout Process Implementation**
+
+### **Login Process - Step by Step**
+
+#### **1. Login Form Component** (`app/login/_components/login-form.jsx`):
+```javascript
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { logIn } from "@/app/actions";
+
+export function LoginForm() {
+  const [error, setError] = useState(null);
+  const router = useRouter();
+  
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const formData = new FormData(event.currentTarget);
+      const response = await logIn(formData);
+      
+      if (!!response.error) {
+        setError(response.error.message);
+      } else {
+        console.log("Login successful", response);
+        router.push('/courses'); // Redirect after successful login
+      }
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="grid gap-4">
+      {error && <p className="text-red-500">{error}</p>}
+      
+      <input
+        name="email"
+        type="email"
+        placeholder="Email"
+        required
+      />
+      
+      <input
+        name="password"
+        type="password"
+        placeholder="Password"
+        required
+      />
+      
+      <button type="submit">Login</button>
+    </form>
+  );
+}
+```
+
+#### **2. Server Action for Login** (`app/actions/index.js`):
+```javascript
+"use server";
+import { signIn } from "@/auth";
+
+export async function logIn(formData) {
+  try {
+    const response = await signIn("credentials", {
+      email: formData.get("email"),
+      password: formData.get("password"),
+      redirect: false,
+    });
+    return response;
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+```
+
+#### **3. Login Page Setup** (`app/login/page.jsx`):
+```javascript
+import { LoginForm } from "./_components/login-form";
+
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="text-3xl font-bold text-center">Sign In</h2>
+          <p className="text-center text-gray-600">Access your account</p>
+        </div>
+        <LoginForm />
+      </div>
+    </div>
+  );
+}
+```
+
+### **Logout Process - Step by Step**
+
+#### **1. Client-side Logout Button**:
+```javascript
+"use client";
+import { signOut } from "next-auth/react";
+
+export function LogoutButton() {
+  return (
+    <button 
+      onClick={() => signOut({ callbackUrl: "/login" })}
+      className="bg-red-500 text-white px-4 py-2 rounded"
+    >
+      Logout
+    </button>
+  );
+}
+```
+
+#### **2. Server-side Logout Action**:
+```javascript
+"use server";
+import { signOut } from "@/auth";
+
+export async function logoutAction() {
+  await signOut({ redirectTo: "/login" });
+}
+```
+
+#### **3. Navigation Component with Logout**:
+```javascript
+"use client";
+import { useSession, signOut } from "next-auth/react";
+import Link from "next/link";
+
+export function Navigation() {
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <nav className="bg-blue-600 text-white p-4">
+      <div className="container mx-auto flex justify-between items-center">
+        <Link href="/" className="text-xl font-bold">
+          EduConnect
+        </Link>
+        
+        <div className="flex items-center space-x-4">
+          {session ? (
+            <>
+              <span>Welcome, {session.user.name}</span>
+              <button
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="bg-red-500 px-3 py-1 rounded"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link href="/login" className="bg-green-500 px-3 py-1 rounded">
+              Login
+            </Link>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+}
+```
+
+### **Session Management Examples**
+
+#### **1. Protecting Server Components**:
+```javascript
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+
+export default async function ProtectedPage() {
+  const session = await auth();
+  
+  if (!session) {
+    redirect("/login");
+  }
+  
+  return (
+    <div>
+      <h1>Protected Content</h1>
+      <p>Welcome back, {session.user.name}!</p>
+      <p>Your role: {session.user.role}</p>
+    </div>
+  );
+}
+```
+
+#### **2. Protecting Client Components**:
+```javascript
+"use client";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+export function UserProfile() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+  
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+  
+  if (!session) {
+    return <div>Redirecting...</div>;
+  }
+  
+  return (
+    <div>
+      <h2>User Profile</h2>
+      <p>Name: {session.user.name}</p>
+      <p>Email: {session.user.email}</p>
+      <p>Role: {session.user.role}</p>
+    </div>
+  );
+}
+```
+
+#### **3. Conditional Rendering Based on Auth Status**:
+```javascript
+"use client";
+import { useSession } from "next-auth/react";
+
+export function AuthDependentContent() {
+  const { data: session, status } = useSession();
+  
+  if (status === "loading") {
+    return <div className="animate-pulse">Loading...</div>;
+  }
+  
+  return (
+    <div>
+      {session ? (
+        <div>
+          <h3>Authenticated Content</h3>
+          <p>Hello {session.user.name}</p>
+          {session.user.role === "admin" && (
+            <div>
+              <h4>Admin Only Content</h4>
+              <button>Admin Dashboard</button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div>
+          <h3>Public Content</h3>
+          <p>Please log in to access more features</p>
+          <a href="/login">Login</a>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+## �🚀 **Suggested Improvements for A+ Grade:**
 
 ### **1. Security Enhancements (Priority: High)**
 ```javascript

@@ -53,141 +53,71 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 npm install next-auth@beta @auth/mongodb-adapter mongodb bcryptjs mongoose
 ```
 
-### Authentication Flow
+### Features Overview
 
-1. **Login**: Users authenticate with email/password through `/login`
-2. **Session**: JWT tokens store user data (id, name, email, role)
-3. **Protection**: Pages can be protected using `auth()` server-side or `useSession()` client-side
-4. **Logout**: Users can sign out through the logout functionality
+✅ **Secure Authentication**
+- Email/password login with bcrypt hashing
+- JWT-based session management
+- Role-based access control
 
-### Login Process
+✅ **Database Integration**
+- MongoDB with Mongoose ODM
+- Custom user model with profile data
+- Optimized connection handling
 
-**1. Login Form Component** (`app/login/_components/login-form.jsx`):
+✅ **Modern Implementation**
+- NextAuth.js v5 with App Router
+- Server Actions for form handling
+- Client/Server component support
+
+✅ **User Experience**
+- Responsive login/logout flow
+- Error handling and validation
+- Session persistence
+
+✅ **Developer Friendly**
+- TypeScript ready
+- Environment variable configuration
+- Comprehensive documentation
+
+### Quick Usage
+
+**Protect Server Components:**
 ```javascript
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { logIn } from "@/app/actions";
-
-export function LoginForm() {
-  const [error, setError] = useState(null);
-  const router = useRouter();
-  
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    try {
-      const formData = new FormData(event.currentTarget);
-      const response = await logIn(formData);
-      
-      if (!!response.error) {
-        setError(response.error.message);
-      } else {
-        console.log("Login successful", response);
-        router.push('/courses'); // Redirect after login
-      }
-    } catch (error) {
-      setError(error.message);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="grid gap-4">
-      {error && <p className="text-red-500">{error}</p>}
-      
-      <input
-        name="email"
-        type="email"
-        placeholder="Email"
-        required
-      />
-      
-      <input
-        name="password"
-        type="password"
-        placeholder="Password"
-        required
-      />
-      
-      <button type="submit">Login</button>
-    </form>
-  );
-}
-```
-
-**2. Server Action** (`app/actions/index.js`):
-```javascript
-"use server";
-import { signIn } from "@/auth";
-
-export async function logIn(formData) {
-  try {
-    const response = await signIn("credentials", {
-      email: formData.get("email"),
-      password: formData.get("password"),
-      redirect: false,
-    });
-    return response;
-  } catch (error) {
-    throw new Error(error);
-  }
-}
-```
-
-### Logout Process
-
-**1. Logout Button Component:**
-```javascript
-"use client";
-import { signOut } from "next-auth/react";
-
-export function LogoutButton() {
-  return (
-    <button onClick={() => signOut({ callbackUrl: "/login" })}>
-      Logout
-    </button>
-  );
-}
-```
-
-**2. Server-side Logout:**
-```javascript
-import { signOut } from "@/auth";
-
-export async function logoutAction() {
-  await signOut({ redirectTo: "/login" });
-}
-```
-
-### Session Management
-
-**Check Authentication Status:**
-```javascript
-// Server Component
 import { auth } from "@/auth";
 
 export default async function ProtectedPage() {
   const session = await auth();
-  
-  if (!session) {
-    redirect("/login");
-  }
-  
+  if (!session) redirect("/login");
   return <div>Welcome {session.user.name}</div>;
 }
+```
 
-// Client Component
+**Protect Client Components:**
+```javascript
 "use client";
 import { useSession } from "next-auth/react";
 
 export function UserProfile() {
-  const { data: session, status } = useSession();
-  
-  if (status === "loading") return <div>Loading...</div>;
-  if (status === "unauthenticated") return <div>Please login</div>;
-  
+  const { data: session } = useSession();
+  if (!session) return <div>Please login</div>;
   return <div>Hello {session.user.name}</div>;
 }
 ```
+
+### Key Files Structure
+```
+├── auth.js                              # NextAuth configuration
+├── app/api/auth/[...nextauth]/route.js  # API routes
+├── db/mongoClientPromise.js             # MongoDB client
+├── models/user-model.js                 # User schema
+├── db/queries/user.js                   # Database operations
+└── app/actions/index.js                 # Server actions
+```
+
+### Complete Setup Guide
+📚 For detailed implementation, login/logout process, and step-by-step setup instructions, see:
+**[NEXTAUTH_COMPLETE_SETUP_GUIDE.md](./NEXTAUTH_COMPLETE_SETUP_GUIDE.md)**
 
 ### Key Files
 - `auth.js` - NextAuth configuration
@@ -197,52 +127,9 @@ export function UserProfile() {
 - `db/queries/user.js` - Database operations
 - `app/actions/index.js` - Server actions
 
-### MongoDB Client Setup
-
-Create `db/mongoClientPromise.js` file with this exact code:
-
-```javascript
-import { MongoClient } from "mongodb";
-
-if (!process.env.MONGODB_CONNECTION_STRING) {
-  throw new Error(
-    'Invalid/Missing environment variable: "MONGODB_CONNECTION_STRING"'
-  );
-}
-
-const uri = process.env.MONGODB_CONNECTION_STRING;
-const options = {};
-
-let client;
-let mongoClientPromise;
-
-if (process.env.NODE_ENV === "development") {
-  // In development mode, use a global variable so that the value
-  // is preserved across module reloads caused by HMR (Hot Module Replacement).
-  if (!global._mongoClientPromise) {
-    client = new MongoClient(uri, options);
-    global._mongoClientPromise = client.connect();
-  }
-  mongoClientPromise = global._mongoClientPromise;
-} else {
-  // In production mode, it's best to not use a global variable.
-  client = new MongoClient(uri, options);
-  mongoClientPromise = client.connect();
-}
-
-// Export a module-scoped MongoClient promise. By doing this in a
-// separate module, the client can be shared across functions.
-export default mongoClientPromise;
-```
-
-**What this does:**
-- ✅ Creates a MongoDB client connection for NextAuth
-- ✅ Handles development vs production environments differently
-- ✅ Prevents connection pooling issues during development
-- ✅ Validates environment variables
-- ✅ Exports a reusable client promise
-
-For detailed setup guide, see `NEXTAUTH_COMPLETE_SETUP_GUIDE.md`.
+### Complete Setup Guide
+📚 For detailed implementation, login/logout process, and step-by-step setup instructions, see:
+**[NEXTAUTH_COMPLETE_SETUP_GUIDE.md](./NEXTAUTH_COMPLETE_SETUP_GUIDE.md)**
 
 ## Learn More
 
