@@ -1,4 +1,5 @@
-import User from "@/models/user-model";
+import { User } from "@/models/user-model";
+import { dbConnect } from "@/services/mongo";
 
 
 
@@ -11,5 +12,14 @@ const getAllUsers = async () => {
         throw error;
     }
 };
+const getUserByEmail = async (email) => {
+    try {
+        const user = await User.findOne({ email }).lean();
+        return user;
+    } catch (error) {
+        console.error("Error fetching user by email:", error);
+        throw error;
+    }
+};
 
-export { getAllUsers };
+export { getAllUsers, getUserByEmail };

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +20,15 @@ import {
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 export function MainNav({ items, children }) {
+
 	const [showMobileMenu, setShowMobileMenu] = useState(false);
+	const [loginSession, setLoginSession] = useState(null);
+	const { data: session } = useSession();
+
+	useEffect(() => {
+		console.log("Session data:", session);
+		setLoginSession(session);
+	}, [session]);
 
 	return (
 		<>
@@ -47,7 +56,8 @@ export function MainNav({ items, children }) {
 				)}
 			</div>
 			<nav className="flex items-center gap-3">
-				<div className="items-center gap-3 hidden lg:flex">
+				{!loginSession && (
+					<div className="items-center gap-3 hidden lg:flex">
 					<Link
 						href="/login"
 						className={cn(buttonVariants({ size: "sm" }), "px-4")}>
@@ -69,6 +79,7 @@ export function MainNav({ items, children }) {
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
+				)}
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<div className="cursor-pointer">
@@ -92,7 +103,7 @@ export function MainNav({ items, children }) {
 							<Link href="">Testimonials & Certificates</Link>
 						</DropdownMenuItem>
 						<DropdownMenuItem className="cursor-pointer" asChild>
-							<Link href="">Logout</Link>
+							<Link onClick={() => signOut()} href="">Logout</Link>
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
