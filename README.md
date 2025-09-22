@@ -32,20 +32,35 @@ This project uses **NextAuth.js v5** with MongoDB for authentication. The authen
 - ✅ **Custom user model** with role-based access
 - ✅ **Session callbacks** for custom user data
 - ✅ **Server actions** for form handling
+- ✅ **Protected routes** with middleware
+- ✅ **Callback URL support** for smart redirects
+
+### 📚 Documentation
+- **[Complete Authentication Guide](./COMPLETE_AUTHENTICATION_GUIDE.md)** - Detailed step-by-step instructions
+- **[Quick Setup (5 minutes)](./QUICK_AUTH_SETUP.md)** - Fast track implementation
+- **[NextAuth Setup Guide](./NEXTAUTH_COMPLETE_SETUP_GUIDE.md)** - Original setup documentation
 
 ### Quick Setup
 
 1. **Environment Variables** - Create `.env.local`:
 ```bash
-MONGODB_CONNECTION_STRING=mongodb://localhost:27017/edu-connect
-ENVIRONMENT=edu-connect
 AUTH_SECRET=your-generated-secret-here
+AUTH_TRUST_HOST=true
 NEXTAUTH_URL=http://localhost:3000
+MONGODB_CONNECTION_STRING=mongodb://localhost:27017/your-db
+ENVIRONMENT=your-db-name
 ```
 
 2. **Generate AUTH_SECRET**:
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+node -e "console.log('AUTH_SECRET=' + require('crypto').randomBytes(32).toString('hex'))"
+```
+
+3. **Test Authentication**:
+```bash
+npm run dev
+# Navigate to /account → Should redirect to login
+# Login → Should redirect back to /account
 ```
 
 3. **Install Dependencies**:

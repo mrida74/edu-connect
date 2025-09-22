@@ -5,6 +5,7 @@ import { dbConnect } from "@/services/mongo";
 
 const getAllUsers = async () => {
     try {
+        await dbConnect();
         const users = await User.find({});
         return users;
     } catch (error) {
@@ -14,6 +15,7 @@ const getAllUsers = async () => {
 };
 const getUserByEmail = async (email) => {
     try {
+        await dbConnect();
         const user = await User.findOne({ email }).lean();
         return user;
     } catch (error) {

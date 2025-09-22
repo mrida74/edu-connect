@@ -19,6 +19,9 @@ export const {
     strategy: 'jwt'
   },
   
+  // Trust host for production
+  trustHost: true,
+  
   providers: [
     CredentialsProvider({
       credentials: {
@@ -83,55 +86,3 @@ export const {
   secret: process.env.AUTH_SECRET,
 });
 
-// export const {
-//   handlers: { GET, POST },
-//   auth,
-//   signIn,
-//   signOut,
-// } = NextAuth({
-//   adapter: MongoDBAdapter(mongoClientPromise, {
-//     databaseName: process.env.ENVIRONMENT,
-//   }),
-//   session: {
-//     strategy: 'jwt'
-//   },
-//   providers: [
-//     CredentialsProvider({
-//       credentials: {
-//         email: {},
-//         password: {},
-//       },
-//       async authorize(credentials) {
-//         if(credentials === null) return null;
-//         try {
-//           const user = await getUserByEmail(credentials?.email);
-//           if (user) {
-//             const isMatch = await bcrypt.compare(credentials?.password, user?.password)
-//             if (isMatch) {
-//               return{
-//                 id: user._id.toString(),
-//                 firstName: user?.firstName,
-//                 lastName: user?.lastName,
-//                 email: user?.email,
-//                 profilePicture: user?.profile_picture,
-//                 role: user?.role
-//               }
-//             } else {
-//               throw new Error("Invalid password");
-//             }
-            
-
-//           } else {
-//             throw new Error("User not found")
-//           }
-
-//         } catch (error) {
-//             throw error;
-//         }
-
-//       }
-//     }),
-   
-//   ],
-//   secret: process.env.AUTH_SECRET,
-// });

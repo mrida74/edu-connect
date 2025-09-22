@@ -9,8 +9,14 @@ export async function logIn(formData) {
       password: formData.get("password"),
       redirect: false,
     });
-    return response
+    
+    // Check if login was successful
+    if (response?.error) {
+      return { error: response.error };
+    }
+    
+    return { success: true };
   } catch (error) {
-    throw new Error(error)
+    return { error: { message: error.message } };
   }
 }

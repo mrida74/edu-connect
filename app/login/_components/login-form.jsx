@@ -11,23 +11,31 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { logIn } from "@/app/actions";
 import { useState } from "react";
 
 export function LoginForm() {
   const [error, setError] = useState(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Get callbackUrl from URL parameters
+  const callbackUrl = searchParams.get('callbackUrl') || '/courses';
+  
   const handleSubmit = async (event)=> {
     event.preventDefault();
     try {
       const formData = new FormData(event.currentTarget)
       const response = await logIn(formData);
-      if(!!response.error) {
-        setError(response.error.message)
+      
+      if (response?.error) {
+        setError(response.error.message || 'Login failed');
+      } else if (response?.success) {
+        // Redirect to callbackUrl or default to courses
+        router.push(callbackUrl);
       } else {
-         console.log("Login successful", response);
-        router.push('/courses')
+        setError('Unexpected login response');
       }
     } catch (error) {
       setError(error.message)
