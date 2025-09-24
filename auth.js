@@ -16,7 +16,13 @@ export const {
     databaseName: process.env.ENVIRONMENT,
   }),
   session: {
-    strategy: 'jwt'
+    strategy: 'jwt',
+    maxAge: 7 * 24 * 60 * 60, // 7 days
+  },
+  
+  jwt: {
+    maxAge: 7 * 24 * 60 * 60, // 7 days
+    encryption: false, // Disable encryption for development
   },
   
   // Trust host for production
@@ -59,28 +65,45 @@ export const {
   
   // Add callbacks to preserve user data in session
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.firstName = user.firstName;
-        token.lastName = user.lastName;
-        token.role = user.role;
-        token.profilePicture = user.profilePicture;
+    async jwt({ token, user, trigger }) {
+      // Handle JWT errors gracefully
+      try {
+        if (user) {
+          token.id = user.id;
+          token.firstName = user.firstName;
+          token.lastName = user.lastName;
+          token.role = user.role;
+          token.profilePicture = user.profilePicture;
+        }
+        return token;
+      } catch (error) {
+        console.error("JWT callback error:", error);
+        return token;
       }
-      return token;
     },
     
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id;
-        session.user.firstName = token.firstName;
-        session.user.lastName = token.lastName;
-        session.user.name = `${token.firstName} ${token.lastName}`;
-        session.user.role = token.role;
-        session.user.profilePicture = token.profilePicture;
+      try {
+        if (token) {
+          session.user.id = token.id;
+          session.user.firstName = token.firstName;
+          session.user.lastName = token.lastName;
+          session.user.name = `${token.firstName} ${token.lastName}`;
+          session.user.role = token.role;
+          session.user.profilePicture = token.profilePicture;
+        }
+        return session;
+      } catch (error) {
+        console.error("Session callback error:", error);
+        return session;
       }
-      return session;
     },
+  },
+  
+  // Pages configuration
+  pages: {
+    signIn: '/login',
+    error: '/auth/error', // Error code passed in query string as ?error=
   },
   
   secret: process.env.AUTH_SECRET,

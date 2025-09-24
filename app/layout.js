@@ -20,7 +20,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={cn(inter.className, poppins.className)}>
-        <SessionProvider>
+        <SessionProvider 
+          refetchInterval={5 * 60}         // Check every 5 minutes (balanced)
+          refetchOnWindowFocus={true}      // Check when user comes back
+          refetchWhenOffline={false}       // Don't check when offline
+        >
           {children}
           <Toaster
             richColors
