@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import GitHubProvider from "next-auth/providers/github";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import mongoClientPromise from "@/db/mongoClientPromise";
 import { getUserByEmail } from "./db/quaries/user";
@@ -48,7 +50,10 @@ export const {
                 name: `${user?.firstName} ${user?.lastName}`, // Add full name
                 email: user?.email,
                 profilePicture: user?.profilePicture,
-                role: user?.role
+                phone: user?.phone,
+                bio: user?.bio,
+                socialMedia: user?.socialMedia,
+                role: user?.role?.toLowerCase() || 'student' // Handle case and default
               }
             } else {
               throw new Error("Invalid password");
@@ -61,20 +66,50 @@ export const {
         }
       }
     }),
+    
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: { params: { prompt: "consent", access_type: "offline", response_type: "code" } },
+    }),
+    
+    GitHubProvider({
+      clientId: process.env.GITHUB_ID,
+      clientSecret: process.env.GITHUB_SECRET,
+    }),
   ],
   
   // Add callbacks to preserve user data in session
   callbacks: {
-    async jwt({ token, user, trigger }) {
+    async signIn({ user, account, profile }) {
+      // Allow all sign-ins (credentials, google, github)
+      if (account.provider === "google" || account.provider === "github") {
+        // Social login users are automatically verified
+        return true;
+      }
+      return true; // Allow credentials login
+    },
+    
+    async jwt({ token, user, account, profile }) {
       // Handle JWT errors gracefully
       try {
+        // Only set user data on first login (when user object exists)
         if (user) {
           token.id = user.id;
           token.firstName = user.firstName;
           token.lastName = user.lastName;
-          token.role = user.role;
-          token.profilePicture = user.profilePicture;
+          token.role = user.role || 'student'; // Default role for social users
+          token.profilePicture = user.profilePicture || user.image;
+          token.phone = user.phone;
+          token.bio = user.bio;
+          token.socialMedia = user.socialMedia;
         }
+        
+        // Only set provider info on first login (when account object exists)
+        if (account) {
+          token.provider = account.provider;
+        }
+        
         return token;
       } catch (error) {
         console.error("JWT callback error:", error);
@@ -86,12 +121,17 @@ export const {
       try {
         if (token) {
           session.user.id = token.id;
-          session.user.firstName = token.firstName;
-          session.user.lastName = token.lastName;
-          session.user.name = `${token.firstName} ${token.lastName}`;
-          session.user.role = token.role;
-          session.user.profilePicture = token.profilePicture;
+          session.user.firstName = token?.firstName;
+          session.user.lastName = token?.lastName;
+          session.user.name = (token?.firstName || token?.lastName ) ? `${token?.firstName} ${token?.lastName}` : session.user.name;
+          session.user.role = token?.role;
+          session.user.profilePicture = token?.profilePicture;
+          session.user.phone = token?.phone;
+          session.user.bio = token?.bio;
+          session.user.socialMedia = token?.socialMedia;
+          session.user.provider = token?.provider;
         }
+       
         return session;
       } catch (error) {
         console.error("Session callback error:", error);

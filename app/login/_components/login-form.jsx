@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useRouter, useSearchParams } from "next/navigation";
 import { logIn } from "@/app/actions";
 import { useState } from "react";
+import { SocialLogin } from "@/components/social-login";
 
 export function LoginForm() {
   const [error, setError] = useState(null);
@@ -75,11 +76,22 @@ export function LoginForm() {
             Login
           </Button>
         </form>
+        
+        {/* Social Login Component */}
+        <SocialLogin callbackUrl={callbackUrl} />
+        
         <div className="mt-4 text-center text-sm">
           Don&apos;t have an account?{" "}
-          <Link href="register" className="underline">
-            Register
+          <p> 
+            Register as a  {" "}
+            <Link href="/register/student" className="underline">
+             student
           </Link>
+           {" "} or{" "}
+          <Link href="/register/instructor" className="underline">
+            instructor
+          </Link>
+          </p>
         </div>
       </CardContent>
     </Card>

@@ -51,7 +51,7 @@ export function MainNav({ items, children }) {
 				) : null}
 
 				{showMobileMenu && items && (
-					<MobileNav items={items}>{children}</MobileNav>
+					<MobileNav loginSession={loginSession} items={items}>{children}</MobileNav>
 				)}
 			</div>
 			<nav className="flex items-center gap-3">
@@ -101,9 +101,11 @@ export function MainNav({ items, children }) {
 						<DropdownMenuItem className="cursor-pointer" asChild>
 							<Link href="/account/testimonials">Testimonials & Certificates</Link>
 						</DropdownMenuItem>
-						<DropdownMenuItem className="cursor-pointer" asChild>
+						{!!loginSession && (
+							<DropdownMenuItem className="cursor-pointer" asChild>
 							<Link onClick={() => signOut()} href="">Logout</Link>
 						</DropdownMenuItem>
+						)}
 					</DropdownMenuContent>
 				</DropdownMenu>
 				<button

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 export default async function AccountPage() {
   const session = await auth();
   
+  
   if (!session) {
     redirect("/login");
   }
@@ -20,7 +21,7 @@ export default async function AccountPage() {
             <div className="space-y-3">
               <div>
                 <label className="text-sm font-medium text-gray-600">Name</label>
-                <p className="text-lg">{session.user?.firstName} {session.user?.lastName}</p>
+                <p className="text-lg">{session.user?.name}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Email</label>
