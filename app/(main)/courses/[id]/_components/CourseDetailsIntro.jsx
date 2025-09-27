@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import Image from "next/image";
+import Enrollment from "@/components/Enrollment";
 
 const CourseDetailsIntro = ({title, subtitle, thumbnail}) => {
   return (
@@ -21,9 +22,7 @@ const CourseDetailsIntro = ({title, subtitle, thumbnail}) => {
             </p>
 
             <div className="mt-6 flex items-center justify-center flex-wrap gap-3">
-              <Link href="" className={cn(buttonVariants({ size: "lg" }))}>
-                Enroll Now
-              </Link>
+             <Enrollment linkType={false} />
               <Link
                 href=""
                 className={cn(

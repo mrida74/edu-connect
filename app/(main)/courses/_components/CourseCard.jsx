@@ -4,6 +4,7 @@ import { BookOpen, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CourseProgress } from "@/components/course-progress";
 import { formatPrice } from "@/lib/formatPrice";
+import Enrollment from "@/components/Enrollment";
 
 const CourseCard = ({ course }) => (
   <Link key={course.id} href={`/courses/${course.id}`}>
@@ -32,10 +33,7 @@ const CourseCard = ({ course }) => (
           <p className="text-md md:text-sm font-medium text-slate-700">
             {formatPrice(course.price || 49)}
           </p>
-          <Button variant="ghost" className="text-xs text-sky-700 h-7 gap-1">
-            Enroll
-            <ArrowRight className="w-3" />
-          </Button>
+          <Enrollment courseId={course.id} linkType={true} />
         </div>
       </div>
     </div>
