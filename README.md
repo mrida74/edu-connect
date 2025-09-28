@@ -1,108 +1,212 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🎓 EduConnect - Online Learning PlatformThis is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
 
-First, run the development server:
 
-```bash
-npm run dev
+A comprehensive online learning platform built with **Next.js 13+**, **NextAuth.js**, **Stripe**, and **MongoDB**.## Getting Started
+
+
+
+## ✨ FeaturesFirst, run the development server:
+
+
+
+- 🔐 **Multi-provider Authentication** (Google, GitHub, Email/Password)```bash
+
+- 💳 **Stripe Payment Integration** for course purchasesnpm run dev
+
+- 📚 **Course Management System** with lessons and modules# or
+
+- 🎯 **Role-based Access** (Students, Instructors)yarn dev
+
+- 📱 **Responsive Design** with Tailwind CSS# or
+
+- 🎨 **Modern UI Components** with shadcn/uipnpm dev
+
 # or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+## 🚀 Quick Startbun dev
+
 ```
+
+### Prerequisites
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- Node.js 18+ and npm
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- MongoDB databaseYou can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
-## 🔐 Authentication
+- Stripe account (for payments)
 
-This project uses **NextAuth.js v5** with MongoDB for authentication. The authentication system includes:
+- Google/GitHub OAuth apps (optional)This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
-### Features
-- ✅ **Credentials-based login** with email and password
+
+
+### Installation## 🔐 Authentication
+
+
+
+```bashThis project uses **NextAuth.js v5** with MongoDB for authentication. The authentication system includes:
+
+# Clone the repository
+
+git clone https://github.com/mrida74/edu-connect.git### Features
+
+cd edu-connect- ✅ **Credentials-based login** with email and password
+
 - ✅ **JWT session management** for stateless authentication
-- ✅ **MongoDB integration** for user data storage
-- ✅ **Password hashing** with bcrypt
+
+# Install dependencies- ✅ **MongoDB integration** for user data storage
+
+npm install- ✅ **Password hashing** with bcrypt
+
 - ✅ **Custom user model** with role-based access
-- ✅ **Session callbacks** for custom user data
-- ✅ **Server actions** for form handling
-- ✅ **Protected routes** with middleware
+
+# Setup environment variables- ✅ **Session callbacks** for custom user data
+
+cp .env.example .env.local- ✅ **Server actions** for form handling
+
+# Edit .env.local with your configuration- ✅ **Protected routes** with middleware
+
 - ✅ **Callback URL support** for smart redirects
 
-### 📚 Documentation
-- **[Complete Authentication Guide](./COMPLETE_AUTHENTICATION_GUIDE.md)** - Detailed step-by-step instructions
+# Run development server
+
+npm run dev### 📚 Documentation
+
+```- **[Complete Authentication Guide](./COMPLETE_AUTHENTICATION_GUIDE.md)** - Detailed step-by-step instructions
+
 - **[Quick Setup (5 minutes)](./QUICK_AUTH_SETUP.md)** - Fast track implementation
-- **[NextAuth Setup Guide](./NEXTAUTH_COMPLETE_SETUP_GUIDE.md)** - Original setup documentation
 
-### Quick Setup
+Open [http://localhost:3000](http://localhost:3000) to view the application.- **[NextAuth Setup Guide](./NEXTAUTH_COMPLETE_SETUP_GUIDE.md)** - Original setup documentation
 
-1. **Environment Variables** - Create `.env.local`:
+
+
+## 📚 Complete Documentation### Quick Setup
+
+
+
+For detailed setup instructions, configuration guides, and development workflows, visit our comprehensive documentation:1. **Environment Variables** - Create `.env.local`:
+
 ```bash
-AUTH_SECRET=your-generated-secret-here
+
+### **[📖 View Complete Documentation →](./docs/README.md)**AUTH_SECRET=your-generated-secret-here
+
 AUTH_TRUST_HOST=true
-NEXTAUTH_URL=http://localhost:3000
+
+The documentation includes:NEXTAUTH_URL=http://localhost:3000
+
 MONGODB_CONNECTION_STRING=mongodb://localhost:27017/your-db
-ENVIRONMENT=your-db-name
-```
 
-2. **Generate AUTH_SECRET**:
-```bash
+- **[🔐 Authentication Setup](./docs/AUTH_GUIDE.md)** - NextAuth.js with Google, GitHub, and credentialsENVIRONMENT=your-db-name
+
+- **[💳 Stripe Integration](./docs/STRIPE_GUIDE.md)** - Payment processing and webhooks```
+
+- **[⚙️ Environment Setup](./docs/ENV_SETUP.md)** - Environment variables configuration
+
+- **[🗄️ Database Setup](./docs/DATABASE_GUIDE.md)** - MongoDB schemas and connection2. **Generate AUTH_SECRET**:
+
+- **[🔧 Development Workflow](./docs/DEV_WORKFLOW.md)** - Development process and testing```bash
+
 node -e "console.log('AUTH_SECRET=' + require('crypto').randomBytes(32).toString('hex'))"
-```
 
-3. **Test Authentication**:
-```bash
-npm run dev
-# Navigate to /account → Should redirect to login
-# Login → Should redirect back to /account
-```
+## 🛠️ Tech Stack```
+
+
+
+- **Framework:** Next.js 13+ (App Router)3. **Test Authentication**:
+
+- **Authentication:** NextAuth.js v5```bash
+
+- **Database:** MongoDB with Mongoosenpm run dev
+
+- **Payments:** Stripe# Navigate to /account → Should redirect to login
+
+- **Styling:** Tailwind CSS# Login → Should redirect back to /account
+
+- **UI Components:** shadcn/ui```
+
+- **Language:** JavaScript
 
 3. **Install Dependencies**:
-```bash
+
+## 🏗️ Project Structure```bash
+
 npm install next-auth@beta @auth/mongodb-adapter mongodb bcryptjs mongoose
-```
 
-### Features Overview
+``````
 
-✅ **Secure Authentication**
-- Email/password login with bcrypt hashing
-- JWT-based session management
-- Role-based access control
+edu-connect/
 
-✅ **Database Integration**
-- MongoDB with Mongoose ODM
-- Custom user model with profile data
-- Optimized connection handling
+├── app/                    # Next.js app directory### Features Overview
 
-✅ **Modern Implementation**
+│   ├── (main)/            # Main application routes
+
+│   ├── api/               # API routes✅ **Secure Authentication**
+
+│   ├── login/             # Authentication pages- Email/password login with bcrypt hashing
+
+│   └── register/          # Registration pages- JWT-based session management
+
+├── components/            # Reusable UI components- Role-based access control
+
+├── docs/                  # Complete documentation
+
+├── models/               # Database models✅ **Database Integration**
+
+├── services/             # External service integrations- MongoDB with Mongoose ODM
+
+└── lib/                  # Utility functions- Custom user model with profile data
+
+```- Optimized connection handling
+
+
+
+## 🤝 Contributing✅ **Modern Implementation**
+
 - NextAuth.js v5 with App Router
-- Server Actions for form handling
-- Client/Server component support
 
-✅ **User Experience**
-- Responsive login/logout flow
+1. Fork the repository- Server Actions for form handling
+
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)- Client/Server component support
+
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+
+4. Push to the branch (`git push origin feature/amazing-feature`)✅ **User Experience**
+
+5. Open a Pull Request- Responsive login/logout flow
+
 - Error handling and validation
-- Session persistence
 
-✅ **Developer Friendly**
+## 📄 License- Session persistence
+
+
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.✅ **Developer Friendly**
+
 - TypeScript ready
-- Environment variable configuration
+
+## 🆘 Support- Environment variable configuration
+
 - Comprehensive documentation
+
+If you encounter any issues or have questions:
 
 ### Quick Usage
 
-**Protect Server Components:**
-```javascript
+1. Check the [📖 Documentation](./docs/README.md)
+
+2. Search existing [GitHub Issues](https://github.com/mrida74/edu-connect/issues)**Protect Server Components:**
+
+3. Create a new issue with detailed information```javascript
+
 import { auth } from "@/auth";
 
+---
+
 export default async function ProtectedPage() {
-  const session = await auth();
+
+**Happy Learning! 🎓✨**  const session = await auth();
   if (!session) redirect("/login");
   return <div>Welcome {session.user.name}</div>;
 }
