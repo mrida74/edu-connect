@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CreditCard, Lock, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { formatAmountForStripe } from '@/lib/stripe-helper';
+import { formatPrice } from '@/lib/formatPrice';
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
@@ -36,9 +37,9 @@ function CheckoutForm({ course, user }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [billingDetails, setBillingDetails] = useState({
-    name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || '',
-    email: user.email || '',
-    phone: user.phone || '',
+    name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
   });
 
   const handleSubmit = async (event) => {
@@ -55,12 +56,33 @@ function CheckoutForm({ course, user }) {
     // Handle free courses
     if (course.price === 0) {
       try {
-        // TODO: Implement free course enrollment
-        console.log('Enrolling in free course:', course.id);
+        // Create enrollment for free course
+        const enrollmentResponse = await fetch('/api/enroll', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            courseId: course.id,
+            userId: user?.id,
+            paymentIntentId: null,
+            amount: 0,
+            currency: 'usd',
+            isFree: true
+          }),
+        });
+
+        const enrollmentResult = await enrollmentResponse.json();
+        
+        if (!enrollmentResult.success) {
+          throw new Error(enrollmentResult.error || 'Failed to create enrollment');
+        }
+
+        // Redirect to success page
         router.push(`/payment/success?courseId=${course.id}&free=true`);
         return;
       } catch (err) {
-        setError('Failed to enroll in free course');
+        setError('Failed to enroll in free course: ' + err.message);
         setLoading(false);
         return;
       }
@@ -76,14 +98,14 @@ function CheckoutForm({ course, user }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: formatAmountForStripe(course.price, course.currency),
-          currency: course.currency.toLowerCase(),
+          amount: formatAmountForStripe(course.price, 'usd'),
+          currency: 'usd',
           metadata: {
             courseId: course.id,
             courseName: course.title,
-            userId: user.id,
             userName: billingDetails.name,
             userEmail: billingDetails.email,
+            userId: user?.id,
           },
         }),
       });
@@ -114,6 +136,33 @@ function CheckoutForm({ course, user }) {
       }
 
       if (paymentIntent.status === 'succeeded') {
+        // Create enrollment in database
+        try {
+          const enrollmentResponse = await fetch('/api/enroll', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              courseId: course.id,
+              userId: user?.id,
+              paymentIntentId: paymentIntent.id,
+              amount: course.price,
+              currency: 'usd',
+              isFree: false
+            }),
+          });
+
+          const enrollmentResult = await enrollmentResponse.json();
+          
+          if (!enrollmentResult.success) {
+            // Still redirect to success page even if enrollment fails
+            // This can be handled on the success page
+          }
+        } catch (enrollmentError) {
+          // Continue to success page, handle enrollment on success page if needed
+        }
+
         // Redirect to success page
         router.push(
           `/payment/success?courseId=${course.id}&paymentIntentId=${paymentIntent.id}`
@@ -214,7 +263,7 @@ function CheckoutForm({ course, user }) {
             ) : (
               <div className="flex items-center justify-center">
                 <Lock className="h-4 w-4 mr-2" />
-                {course.price === 0 ? 'Enroll for Free' : `Pay ${course.price} ${course.currency}`}
+                {course.price === 0 ? 'Enroll for Free' : `Pay ${formatPrice(course.price)}`}
               </div>
             )}
           </Button>

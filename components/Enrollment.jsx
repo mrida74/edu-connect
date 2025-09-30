@@ -20,15 +20,13 @@ function Enrollment({ linkType , courseId }) {
           <ArrowRight className="w-3" />
         </Link>
       ) : (
-        <Button
-          type="submit"
-            href=""
-            className={cn(buttonVariants({ size: "lg" }))}
-          >
-            Enroll Now
-          </Button>
-        )}
-      
+        <Link
+          href={`/courses/${courseId}/purchase`}
+          className={cn(buttonVariants({ size: "lg" }))}
+        >
+          Enroll Now
+        </Link>
+      )}
     </>
   );
 }

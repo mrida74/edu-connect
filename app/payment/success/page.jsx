@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, BookOpen, Download, Award } from 'lucide-react';
+import { CheckCircle, Download, BookOpen, Home } from 'lucide-react';
+import { ReactPDFInvoice } from '@/components/ReactPDFInvoice';
 import Link from 'next/link';
 
 export default function PaymentSuccessPage() {
@@ -11,50 +12,65 @@ export default function PaymentSuccessPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [courseData, setCourseData] = useState(null);
+  const [userData, setUserData] = useState(null);
   
   const courseId = searchParams.get('courseId');
   const paymentIntentId = searchParams.get('paymentIntentId');
   const isFree = searchParams.get('free') === 'true';
 
   useEffect(() => {
-    // TODO: Verify payment and enroll user in course
     const processEnrollment = async () => {
       try {
         if (!courseId) {
           throw new Error('Course ID missing');
         }
 
-        // Mock course data - replace with actual API call
-        const mockCourse = {
-          id: courseId,
-          title: 'Complete Web Development Course',
-          instructor: 'John Doe',
-          thumbnail: '/api/placeholder/400/250'
-        };
-        
-        setCourseData(mockCourse);
-        
-        // TODO: Call your enrollment API
-        console.log('Enrolling user in course:', courseId);
-        console.log('Payment Intent ID:', paymentIntentId);
+        // Fetch course data
+        const courseResponse = await fetch(`/api/courses/${courseId}`);
+        const course = await courseResponse.json();
+        setCourseData(course);
+
+        // Fetch user data (if user is logged in)
+        try {
+          const userResponse = await fetch('/api/auth/session');
+          if (userResponse.ok) {
+            const userSession = await userResponse.json();
+            setUserData(userSession?.user);
+          }
+        } catch (userError) {
+          console.log('User not logged in or session unavailable');
+          // Set default user data for guest purchases
+          setUserData({
+            name: 'Guest User',
+            email: 'guest@example.com'
+          });
+        }
         
       } catch (error) {
-        console.error('Enrollment error:', error);
-        // TODO: Handle enrollment failure
+        console.error('Error processing enrollment:', error);
+        router.push('/courses');
       } finally {
         setLoading(false);
       }
     };
 
     processEnrollment();
-  }, [courseId, paymentIntentId]);
+  }, [courseId, paymentIntentId, router]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!courseData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Processing your enrollment...</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Course Not Found</h1>
+          <p className="text-gray-600">The course you&apos;re looking for doesn&apos;t exist.</p>
         </div>
       </div>
     );
@@ -62,99 +78,85 @@ export default function PaymentSuccessPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto px-4">
+        {/* Success Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {isFree ? 'Enrollment Successful!' : 'Payment Successful!'}
-          </h1>
-          <p className="text-gray-600">
-            {isFree 
-              ? 'You have been enrolled in the course'
-              : 'Thank you for your purchase. You now have access to the course.'
-            }
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
+          <p className="text-lg text-gray-600">
+            Thank you for enrolling in <span className="font-semibold">{courseData.title}</span>
           </p>
         </div>
 
-        {courseData && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Course Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-start space-x-4">
-                <div className="w-24 h-16 bg-gray-200 rounded-lg flex-shrink-0"></div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg">{courseData.title}</h3>
-                  <p className="text-gray-600">by {courseData.instructor}</p>
-                  {paymentIntentId && (
-                    <p className="text-sm text-gray-500 mt-2">
-                      Transaction ID: {paymentIntentId}
-                    </p>
-                  )}
-                </div>
+        {/* Invoice Download Card */}
+        <Card className="mb-8">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center space-x-2">
+              <Download className="w-5 h-5 text-blue-600" />
+              <span>Download Your Invoice</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="text-center mb-6">
+              <p className="text-gray-600 mb-2">
+                Get your professional PDF invoice for this purchase
+              </p>
+              <p className="text-sm text-gray-500">
+                Invoice includes course details, payment information, and receipt
+              </p>
+            </div>
+            
+            {/* Invoice Download Button */}
+            <ReactPDFInvoice 
+              courseData={courseData}
+              paymentData={{
+                paymentIntentId: paymentIntentId,
+                isFree: isFree
+              }}
+              userData={{
+                name: userData?.name || 'Student',
+                email: userData?.email || 'student@example.com',
+                phone: userData?.phone
+              }}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Course Info Summary */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {courseData.title}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Your enrollment is confirmed and you can start learning immediately
+              </p>
+              <div className="inline-flex items-center px-4 py-2 bg-green-50 text-green-800 rounded-full text-sm font-medium mb-6">
+                ✓ Successfully Enrolled
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <BookOpen className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Start Learning</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Access your course content immediately
-              </p>
-              <Link href={`/courses/${courseId}`}>
-                <Button className="w-full">Go to Course</Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Download className="w-8 h-8 text-green-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Download Resources</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Get access to course materials and resources
-              </p>
-              <Button variant="outline" className="w-full">
-                Download
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Award className="w-8 h-8 text-purple-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Certificate</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Earn your certificate upon completion
-              </p>
-              <Button variant="outline" className="w-full">
-                View Progress
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="text-center space-y-4">
-          <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
-            <Link href="/dashboard">
-              <Button variant="outline">Go to Dashboard</Button>
-            </Link>
-            <Link href="/courses">
-              <Button variant="outline">Browse More Courses</Button>
-            </Link>
-          </div>
-          
-          <p className="text-sm text-gray-500">
-            Questions? <Link href="/support" className="text-blue-600 hover:underline">Contact Support</Link>
-          </p>
-        </div>
+              
+              {/* Navigation Buttons */}
+              <div className="space-y-3">
+                <Link href="/account/enrolled-courses">
+                  <Button className="w-full flex items-center justify-center space-x-2">
+                    <BookOpen className="w-4 h-4" />
+                    <span>View My Enrolled Courses</span>
+                  </Button>
+                </Link>
+                
+                <Link href="/">
+                  <Button variant="outline" className="w-full flex items-center justify-center space-x-2">
+                    <Home className="w-4 h-4" />
+                    <span>Back to Home</span>
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

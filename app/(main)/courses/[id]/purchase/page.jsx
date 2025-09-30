@@ -2,12 +2,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { PurchaseForm } from './_components/purchase-form';
-import { CourseInfo } from './_components/course-info';
-import { PricingCard } from './_components/pricing-card';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { CourseInfo } from './_components/course-info';
+import { PricingCard } from './_components/pricing-card';
+import { PurchaseForm } from './_components/purchase-form';
+
 
 export default function CoursePurchasePage() {
   const { id: courseId } = useParams();
@@ -27,26 +29,17 @@ export default function CoursePurchasePage() {
     // Fetch course data
     const fetchCourse = async () => {
       try {
-        // TODO: Replace with your actual course API
-        const mockCourse = {
-          id: courseId,
-          title: 'Complete Web Development Course',
-          description: 'Learn modern web development with React, Next.js, and more.',
-          price: 99.99,
-          currency: 'USD',
-          instructor: 'John Doe',
-          duration: '40 hours',
-          thumbnail: '/api/placeholder/400/250',
-          features: [
-            '40+ hours of video content',
-            'Source code included',
-            'Certificate of completion',
-            'Lifetime access',
-            'Money-back guarantee'
-          ]
-        };
-        setCourse(mockCourse);
+        const response = await fetch(`/api/courses/${courseId}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch course');
+        }
+        
+        const courseData = await response.json();
+        console.log('Fetched course data:', courseData);
+        setCourse(courseData);
       } catch (err) {
+        console.error('Error fetching course:', err);
         setError('Failed to load course information');
       } finally {
         setLoading(false);
@@ -55,6 +48,7 @@ export default function CoursePurchasePage() {
 
     if (status === 'authenticated') {
       fetchCourse();
+      
     }
   }, [courseId, status, router]);
 

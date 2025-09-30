@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import Image from "next/image";
 import Enrollment from "@/components/Enrollment";
 
-const CourseDetailsIntro = ({title, subtitle, thumbnail}) => {
+const CourseDetailsIntro = ({courseId ,title, subtitle, thumbnail}) => {
   return (
     <div className="overflow-x-hidden  grainy">
     <section className="pt-12  sm:pt-16">
@@ -22,7 +22,7 @@ const CourseDetailsIntro = ({title, subtitle, thumbnail}) => {
             </p>
 
             <div className="mt-6 flex items-center justify-center flex-wrap gap-3">
-             <Enrollment linkType={false} />
+             <Enrollment linkType={false} courseId={courseId} />
               <Link
                 href=""
                 className={cn(

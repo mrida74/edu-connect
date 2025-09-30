@@ -3,16 +3,13 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   try {
-    const { amount, currency = 'usd' } = await request.json();
+    const { amount, currency = 'usd' , metadata } = await request.json();
 
     // Create payment intent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount * 100, // Convert to cents
+      amount: amount / 100, // Convert to dollars
       currency: currency,
-      metadata: {
-        course: 'test-course',
-        user: 'test-user'
-      },
+      metadata: metadata || {},
     });
 
     return NextResponse.json({

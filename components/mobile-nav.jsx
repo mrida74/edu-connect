@@ -1,5 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { useLockBody } from "@/hooks/use-lock-body";
@@ -13,6 +14,7 @@ import { Button, buttonVariants } from "./ui/button";
 
 export function MobileNav({ items, children, loginSession }) {
   useLockBody();
+  const router = useRouter();
 
   return (
     <div
@@ -51,11 +53,17 @@ export function MobileNav({ items, children, loginSession }) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="center" className="w-56 mt-4">
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Link href="/register/student">Student</Link>
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => router.push('/register/student')}
+                  >
+                    Student
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Link href="/register/instructor">Instructor</Link>
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => router.push('/register/instructor')}
+                  >
+                    Instructor
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
