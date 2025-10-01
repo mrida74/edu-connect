@@ -1,6 +1,5 @@
 import mongoose , { Schema } from "mongoose";
 
-
 const enrollmentSchema = new Schema({
   user_id: {
     required: true,
@@ -11,6 +10,10 @@ const enrollmentSchema = new Schema({
     required: true,
     type: mongoose.Schema.Types.ObjectId,
     ref: "Course",
+  },
+  paymentIntentId: {
+    type: String,
+    required: false,
   },
   enrollment_date: {
     type: Date,

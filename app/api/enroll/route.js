@@ -41,6 +41,7 @@ export async function POST(request) {
     const enrollment = await Enrollment.create({
       user_id: userId,
       course_id: courseId,
+      paymentIntentId: paymentIntentId || null,
       enrollment_date: new Date(),
       status: 'active',
       method: isFree ? 'free' : 'stripe'

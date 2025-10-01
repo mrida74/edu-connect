@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Download, BookOpen, Home } from 'lucide-react';
+import { CheckCircle, Download, BookOpen, Home, CreditCard } from 'lucide-react';
 import { ReactPDFInvoice } from '@/components/ReactPDFInvoice';
+import PaymentDetails from '@/components/PaymentDetails';
 import Link from 'next/link';
 
 export default function PaymentSuccessPage() {
@@ -137,6 +138,17 @@ export default function PaymentSuccessPage() {
               <div className="inline-flex items-center px-4 py-2 bg-green-50 text-green-800 rounded-full text-sm font-medium mb-6">
                 ✓ Successfully Enrolled
               </div>
+              
+              {/* Payment Details Section */}
+              {paymentIntentId && (
+                <div className="mb-6 text-left">
+                  <div className="flex items-center mb-4">
+                    <CreditCard className="w-5 h-5 mr-2 text-blue-600" />
+                    <h4 className="text-md font-semibold">Payment Information</h4>
+                  </div>
+                  <PaymentDetails paymentIntentId={paymentIntentId} />
+                </div>
+              )}
               
               {/* Navigation Buttons */}
               <div className="space-y-3">
