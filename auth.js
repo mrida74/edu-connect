@@ -5,6 +5,7 @@ import GitHubProvider from "next-auth/providers/github";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import mongoClientPromise from "@/db/mongoClientPromise";
 import { getUserByEmail } from "./db/quaries/user";
+import { User } from "./models/user-model";  // User model import
 import bcrypt from "bcryptjs";
 
 
@@ -53,7 +54,8 @@ export const {
                 phone: user?.phone,
                 bio: user?.bio,
                 socialMedia: user?.socialMedia,
-                role: user?.role?.toLowerCase() || 'student' // Handle case and default
+                role: user?.role?.toLowerCase() || 'student', // Handle case and default
+                hasPassword: user?.hasPassword || false // Include password status
               }
             } else {
               throw new Error("Invalid password");
@@ -71,6 +73,7 @@ export const {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       authorization: { params: { prompt: "consent", access_type: "offline", response_type: "code" } },
+      allowDangerousEmailAccountLinking: true,
     }),
     
     GitHubProvider({
@@ -82,30 +85,95 @@ export const {
   // Add callbacks to preserve user data in session
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Allow all sign-ins (credentials, google, github)
+      // Handle Google/GitHub social login
       if (account.provider === "google" || account.provider === "github") {
-        // Social login users are automatically verified
+        // Split name into firstName and lastName for Google users
+        if (account.provider === "google") {
+          const fullName = profile.name || user.name || "";
+          const nameParts = fullName.trim().split(" ");
+          const firstName = nameParts[0] || "";
+          const lastName = nameParts.slice(1).join(" ") || "";
+          
+          // Check if user exists in database
+          const existingUser = await getUserByEmail(user.email);
+          
+          if (!existingUser) {
+            // Create new Google user with consistent structure
+            const newUser = await User.create({
+              firstName: firstName,
+              lastName: lastName,
+              email: user.email,
+              profilePicture: user.image,  // Google profile image
+              role: "student",
+              provider: "google",
+              emailVerified: new Date(),
+              hasPassword: false // New Google users don't have password yet
+            });
+            
+            // Don't redirect here - let client-side handle it
+          } else {
+            // Existing user - update if needed
+            if (!existingUser.firstName) {
+              await User.updateOne(
+                { email: user.email },
+                {
+                  firstName: firstName,
+                  lastName: lastName,
+                  role: existingUser.role || "student",
+                  profilePicture: user.image
+                }
+              );
+            }
+          }
+        }
         return true;
       }
       return true; // Allow credentials login
     },
     
-    async jwt({ token, user, account, profile }) {
-      // Handle JWT errors gracefully
+    async jwt({ token, user, account, profile, trigger }) {
       try {
         // Only set user data on first login (when user object exists)
         if (user) {
+          if (account?.provider === "google") {
+            // For Google users, split name and set data
+            const fullName = profile?.name || user.name || "";
+            const nameParts = fullName.trim().split(" ");
+            
+            token.firstName = nameParts[0] || "";
+            token.lastName = nameParts.slice(1).join(" ") || "";
+            token.role = user.role || 'student';
+            token.profilePicture = user.image;  // Google image
+          } else {
+            // For credentials users, use database data
+            token.firstName = user.firstName;
+            token.lastName = user.lastName;
+            token.role = user.role || 'student';
+            token.profilePicture = user.profilePicture || "/assets/images/profile.jpg";
+          }
+          
+          // Common fields for all users
           token.id = user.id;
-          token.firstName = user.firstName;
-          token.lastName = user.lastName;
-          token.role = user.role || 'student'; // Default role for social users
-          token.profilePicture = user.profilePicture || user.image;
           token.phone = user.phone;
           token.bio = user.bio;
           token.socialMedia = user.socialMedia;
+          token.hasPassword = user.hasPassword || false; // Track password status
         }
         
-        // Only set provider info on first login (when account object exists)
+        // Always check database for password status
+        // This ensures fresh data on session updates
+        try {
+          const currentUser = await getUserByEmail(token.email);
+          if (currentUser) {
+            token.hasPassword = currentUser.hasPassword || false;
+          }
+        } catch (error) {
+          console.error("Error checking user status:", error);
+          // Fallback to existing token values
+          token.hasPassword = token.hasPassword || false;
+        }
+        
+        // Set provider info on first login
         if (account) {
           token.provider = account.provider;
         }
@@ -116,20 +184,22 @@ export const {
         return token;
       }
     },
-    
+
     async session({ session, token }) {
       try {
         if (token) {
           session.user.id = token.id;
           session.user.firstName = token?.firstName;
           session.user.lastName = token?.lastName;
-          session.user.name = (token?.firstName || token?.lastName ) ? `${token?.firstName} ${token?.lastName}` : session.user.name;
+          session.user.name = (token?.firstName || token?.lastName ) ? `${token?.firstName} ${token?.lastName}`.trim() : session.user.name;
           session.user.role = token?.role;
           session.user.profilePicture = token?.profilePicture;
+          session.user.image = token?.profilePicture;  // NextAuth compatibility এর জন্য
           session.user.phone = token?.phone;
           session.user.bio = token?.bio;
           session.user.socialMedia = token?.socialMedia;
           session.user.provider = token?.provider;
+          session.user.hasPassword = token?.hasPassword || false; // Password status
         }
        
         return session;

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
 import { dbConnect } from "@/services/mongo";
 import { SessionProvider } from "next-auth/react";
+import { PasswordSetupChecker } from "@/components/password-setup-checker";
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
           refetchOnWindowFocus={true}      // Check when user comes back
           refetchWhenOffline={false}       // Don't check when offline
         >
+          <PasswordSetupChecker />
           {children}
           <Toaster
             richColors
